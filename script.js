@@ -5,7 +5,7 @@ const ALL_TABS = [BASIC_TAB, QUIZ_TAB, ...TERRAIN_TYPES];
 
 const TERRAIN_DATA = {
   BASIC: {
-    mainImage: "images/지형 형성.PNG",
+    mainImage: "images/지형 형성.png",
     basicSections: [
       {
         title: "🌋 지형을 만드는 두 가지 힘",
