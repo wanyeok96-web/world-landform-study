@@ -4663,7 +4663,7 @@ body.app-ready .app {
   border-radius: 50%;
   transform: translate(-50%, -50%);
   cursor: pointer;
-  touch-action: none;
+  touch-action: auto;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 10;
 }
@@ -6195,5 +6195,38 @@ body.glacial-era-modal-open {
   .quiz-stat-item {
     width: 100%;
     box-sizing: border-box;
+  }
+}
+
+@media (max-width: 768px) {
+  .hotspot {
+    width: 30px;
+    height: 30px;
+    border-width: 1.5px;
+  }
+
+  .hotspot::after {
+    inset: -4px;
+  }
+
+  .hotspot .hotspot-tooltip {
+    font-size: 12px;
+    padding: 6px 10px;
+    bottom: calc(100% + 10px);
+  }
+
+  .hotspot.hotspot--continental {
+    min-height: 28px;
+    padding: 5px 9px;
+    border-radius: 10px;
+  }
+
+  .hotspot.hotspot--continental .hotspot-bubble-label {
+    font-size: 11px;
+  }
+
+  .hotspot--range-old {
+    width: 76px;
+    height: 32px;
   }
 }

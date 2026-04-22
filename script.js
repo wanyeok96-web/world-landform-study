@@ -3123,7 +3123,7 @@ function setTerrain(terrainName) {
 
   const landscapeContainer = contentEl.querySelector(".landscape-container .hotspots")?.closest(".landscape-container");
   if (landscapeContainer) {
-    initLandscapeHotspotDragging(landscapeContainer, selectedType);
+    // 핫스팟 위치 고정: 드래그 이동 기능 비활성화
   }
   const plateImg = contentEl.querySelector(".plate-tectonics-img");
   if (plateImg instanceof HTMLImageElement) {
