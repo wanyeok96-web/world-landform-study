@@ -3051,7 +3051,6 @@ function setTerrain(terrainName) {
           </div>
           <div class="landscape-action-buttons">
             ${locationFilterControls}
-            <button type="button" class="landscape-copy-json-btn" data-action="copy-hotspot-layout">핫스팟 좌표 JSON 복사</button>
           </div>
         </div>
         <div class="landscape-container">
