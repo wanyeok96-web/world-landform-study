@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>어나더 지오엑스 — 세계의 지형</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="./style.css" />
+    <style>
+      .app-inner {
+        width: 100%;
+        max-width: min(100%, var(--max-width));
+        margin: 0 auto;
+      }
+
+      .terrain-tabs-wrap {
+        margin-top: var(--space-md);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+      }
+
+      .terrain-tabs-wrap::-webkit-scrollbar {
+        height: 8px;
+      }
+
+      .terrain-tabs-wrap::-webkit-scrollbar-thumb {
+        background: rgba(60, 60, 67, 0.25);
+        border-radius: var(--radius-pill);
+      }
+
+      .terrain-tabs {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: center;
+        width: max-content;
+        min-width: 100%;
+      }
+
+      .terrain-tab {
+        flex: 0 0 auto;
+        min-width: 108px;
+      }
+
+      .step-pill.active,
+      .terrain-tab.active {
+        background: var(--bg-card);
+        color: var(--text-primary);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .step-pill.active:hover,
+      .terrain-tab.active:hover {
+        color: var(--text-primary);
+        background: var(--bg-card);
+      }
+
+      .terrain-content {
+        display: grid;
+        gap: var(--space-sm);
+        animation: terrainFadeIn 0.3s ease;
+        font-family: var(--font);
+      }
+
+      .terrain-section-card {
+        padding: var(--space-md);
+        background: var(--bg-card);
+        border: 1px solid var(--separator);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .terrain-placeholder {
+        margin: 0;
+        padding: var(--space-md);
+        border-radius: var(--radius-field);
+        border: 1px dashed var(--separator);
+        background: var(--ios-blue-soft);
+        color: var(--text-secondary);
+        font-size: var(--section-lead-size);
+        line-height: 1.6;
+      }
+
+      .terrain-process-canvas {
+        min-height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .terrain-compare-table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: var(--radius-field);
+        border: 1px solid var(--separator);
+      }
+
+      .terrain-compare-table th,
+      .terrain-compare-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--separator);
+        text-align: left;
+        font-size: var(--section-lead-size);
+        background: var(--bg-card);
+      }
+
+      .terrain-compare-table th {
+        color: var(--text-secondary);
+        font-weight: 600;
+        background: rgba(118, 118, 128, 0.08);
+      }
+
+      .terrain-compare-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .terrain-content[data-terrain-panel="대지형"] .terrain-compare-table th:nth-child(2),
+      .terrain-content[data-terrain-panel="대지형"] .terrain-compare-table td:nth-child(2) {
+        min-width: 92px;
+        width: 92px;
+        white-space: nowrap;
+      }
+
+      .quiz-start {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        border: none;
+        border-radius: var(--radius-pill);
+        background: var(--ios-blue);
+        color: #fff;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.22s var(--ease-spring), background 0.2s ease;
+      }
+
+      .quiz-start:hover {
+        transform: scale(var(--press-scale-hover));
+      }
+
+      .quiz-start:active {
+        transform: scale(var(--press-scale-active));
+        background: var(--ios-blue-pressed);
+      }
+
+      .quiz-start:focus-visible {
+        outline: 2px solid var(--ios-blue);
+        outline-offset: 2px;
+      }
+
+      .terrain-process-flow {
+        display: grid;
+        gap: var(--space-sm);
+      }
+
+      .terrain-before-after {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: var(--space-sm);
+        align-items: center;
+      }
+
+      .terrain-stage-box {
+        border: 1px solid var(--separator);
+        border-radius: var(--radius-field);
+        background: rgba(255, 255, 255, 0.72);
+        padding: var(--space-sm);
+        text-align: center;
+      }
+
+      .terrain-stage-emoji {
+        display: block;
+        font-size: 30px;
+        line-height: 1;
+        margin-bottom: 6px;
+      }
+
+      .terrain-stage-label {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .terrain-stage-arrow {
+        font-size: 22px;
+        color: var(--ios-blue);
+      }
+
+      .terrain-sim-progress {
+        width: 100%;
+        height: 10px;
+        border-radius: var(--radius-pill);
+        background: rgba(118, 118, 128, 0.2);
+        overflow: hidden;
+      }
+
+      .terrain-sim-progress-bar {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--ios-blue), #5ac8fa);
+        transition: width 0.2s ease;
+      }
+
+      .terrain-sim-status {
+        margin: 0;
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+
+      .quiz-wrap {
+        display: grid;
+        gap: var(--space-sm);
+      }
+
+      .quiz-question {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .quiz-options {
+        display: grid;
+        gap: 8px;
+      }
+
+      .quiz-option {
+        width: 100%;
+        text-align: left;
+        padding: 10px 12px;
+        border: 1px solid var(--separator);
+        border-radius: var(--radius-field);
+        background: var(--bg-card);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: var(--section-lead-size);
+        cursor: pointer;
+        transition: transform 0.18s var(--ease-spring), background 0.18s ease, border-color 0.18s ease;
+      }
+
+      .quiz-option:hover {
+        transform: scale(1.01);
+      }
+
+      .quiz-option.is-correct {
+        background: rgba(52, 199, 89, 0.14);
+        border-color: rgba(52, 199, 89, 0.65);
+      }
+
+      .quiz-option.is-wrong {
+        background: rgba(255, 59, 48, 0.14);
+        border-color: rgba(255, 59, 48, 0.65);
+      }
+
+      .quiz-option[disabled] {
+        cursor: default;
+      }
+
+      .quiz-feedback {
+        margin: 0;
+        font-size: var(--section-lead-size);
+        font-weight: 700;
+      }
+
+      .quiz-feedback.correct {
+        color: #1f8a3b;
+      }
+
+      .quiz-feedback.wrong {
+        color: #c1271a;
+      }
+
+      .quiz-progress {
+        margin: 0;
+        font-size: 14px;
+        color: var(--text-tertiary);
+      }
+
+      .step4-result-confirm {
+        border: none;
+        border-radius: var(--radius-pill);
+        background: var(--ios-blue);
+        color: #fff;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 700;
+        padding: 10px 18px;
+        cursor: pointer;
+      }
+
+      @keyframes terrainFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (min-width: 768px) {
+        .terrain-process-canvas {
+          min-height: 200px;
+        }
+      }
+
+      .basic-panel {
+        display: grid;
+        gap: var(--space-sm);
+      }
+
+      .basic-hero-card .basic-hero-lead {
+        margin-top: 0;
+        margin-bottom: var(--space-sm);
+      }
+
+      .basic-hero-image-wrap {
+        margin-top: var(--space-sm);
+        border-radius: var(--radius-card);
+        overflow: hidden;
+        border: 1px solid var(--separator);
+        background: rgba(118, 118, 128, 0.06);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .basic-main-img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .basic-hero-forces {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: var(--space-md);
+      }
+
+      .basic-hero-force-card {
+        margin: 0;
+        padding: var(--space-sm);
+        border-radius: var(--radius-field);
+        border: 1px solid var(--separator);
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .basic-hero-force-title {
+        margin: 0 0 8px;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .basic-hero-force-summary {
+        margin: 0 0 10px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .basic-hero-force-text {
+        margin: 0;
+      }
+
+      .basic-hero-force-text + .basic-hero-force-text {
+        margin-top: 8px;
+      }
+
+      .basic-hero-force-summary + .basic-hero-force-text {
+        margin-top: 0;
+      }
+
+      .basic-hero-force-table {
+        width: 100%;
+        margin-top: 10px;
+        border-collapse: collapse;
+        border: 1px solid var(--separator);
+        border-radius: var(--radius-field);
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.75);
+      }
+
+      .basic-hero-force-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--separator);
+        vertical-align: top;
+        font-size: var(--section-lead-size);
+        line-height: 1.5;
+      }
+
+      .basic-hero-force-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .basic-hero-force-table-term {
+        width: 19%;
+        min-width: 92px;
+        font-weight: 700;
+        text-align: center;
+        color: var(--text-primary);
+        background: rgba(118, 118, 128, 0.07);
+      }
+
+      .basic-hero-force-table-desc {
+        color: var(--text-secondary);
+      }
+
+      @media (max-width: 560px) {
+        .basic-hero-forces {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .basic-section-card .basic-block + .basic-block {
+        margin-top: var(--space-md);
+        padding-top: var(--space-md);
+        border-top: 1px solid var(--separator);
+      }
+
+      .basic-block-title {
+        margin: 0 0 6px;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .basic-block-text {
+        margin: 0;
+      }
+
+      .basic-process-list {
+        margin: 0;
+        padding-left: 0;
+        list-style: none;
+        display: grid;
+        gap: 10px;
+      }
+
+      .basic-process-step {
+        margin: 0;
+      }
+
+      .basic-rock-list {
+        margin: 0;
+        padding-left: 0;
+        list-style: none;
+        display: grid;
+        gap: 12px;
+      }
+
+      .basic-rock-item {
+        margin: 0;
+        padding: var(--space-sm);
+        border-radius: var(--radius-field);
+        border: 1px solid var(--separator);
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .basic-rock-emoji {
+        margin-right: 4px;
+      }
+
+      .basic-nav-intro {
+        margin-top: 0;
+      }
+
+      .basic-navigator-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: var(--space-sm);
+      }
+
+      .basic-nav-pill {
+        min-width: 0;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.35;
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+
+      @media (max-width: 640px) {
+        .basic-navigator-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .landscape-section-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-sm);
+      }
+
+      .landscape-section-title {
+        margin: 0;
+        flex: 1 1 12rem;
+      }
+
+      .landscape-section-title-wrap {
+        flex: 1 1 12rem;
+        min-width: 0;
+      }
+
+      .landscape-guide-text {
+        margin: 6px 0 0;
+      }
+
+      .landscape-copy-json-btn {
+        flex: 0 0 auto;
+        padding: 8px 14px;
+        border: 1px solid var(--separator);
+        border-radius: var(--radius-pill);
+        background: rgba(118, 118, 128, 0.1);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.18s var(--ease-spring);
+      }
+
+      .landscape-copy-json-btn:hover {
+        background: rgba(118, 118, 128, 0.16);
+      }
+
+      .landscape-copy-json-btn:active {
+        transform: scale(var(--press-scale-active));
+      }
+
+      .landscape-copy-json-btn:focus-visible {
+        outline: 2px solid var(--ios-blue);
+        outline-offset: 2px;
+      }
+
+      .landscape-legend-text {
+        margin: 10px 0 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-align: right;
+      }
+
+      .coastal-world-wrap {
+        margin-top: var(--space-md);
+        padding-top: var(--space-sm);
+        border-top: 1px solid var(--separator);
+      }
+
+      .coastal-world-title {
+        margin: 0 0 10px;
+        font-size: 15px;
+        color: var(--text-primary);
+      }
+
+      .coastal-world-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .coastal-world-btn {
+        border: 1px solid var(--separator);
+        border-radius: var(--radius-pill);
+        background: var(--bg-card);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: transform 0.18s var(--ease-spring), background 0.2s ease;
+      }
+
+      .coastal-world-btn:hover {
+        background: rgba(118, 118, 128, 0.12);
+      }
+
+      .coastal-world-btn:active {
+        transform: scale(var(--press-scale-active));
+      }
+
+      .coastal-world-btn:focus-visible {
+        outline: 2px solid var(--ios-blue);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-loading" class="app-loading" role="status" aria-live="polite">지형 데이터를 불러오는 중...</div>
+    <div class="app">
+      <div class="app-inner">
+        <header class="header">
+          <div class="copyright-header" aria-label="저작권 정보">
+            <div class="copyright-header-inner">
+              <p class="copyright-header-line">무단 배포·복제·상업적 이용 금지 | ⓒ 어나더 지오엑스(Geo-Ex)-landform v.1.0</p>
+              <p class="copyright-header-line">제작: 경기 이솔고등학교 교사 이왕혁 | 문의: wanyeok96@gmail.com</p>
+            </div>
+          </div>
+
+          <section class="title-section" aria-label="앱 제목 영역">
+            <p class="title-section-tagline">당신의 지리 루틴을 만들어줄, 또 하나의 지리 학습 도구</p>
+            <h1 class="title-section-brand">어나더 지오엑스(geo-eX)</h1>
+            <p class="title-section-series">Exercise to be an expert — world landform master</p>
+            <div class="title-section-emojis" role="group" aria-label="7개 지형 대표 이모지">
+              <span class="title-section-emoji" aria-hidden="true">🏜️</span>
+              <span class="title-section-emoji" aria-hidden="true">🧊</span>
+              <span class="title-section-emoji" aria-hidden="true">🏞️</span>
+              <span class="title-section-emoji" aria-hidden="true">🏖️</span>
+              <span class="title-section-emoji" aria-hidden="true">🌋</span>
+              <span class="title-section-emoji" aria-hidden="true">🕳️</span>
+              <span class="title-section-emoji" aria-hidden="true">⛰️</span>
+            </div>
+          </section>
+
+          <div class="terrain-tabs-wrap" aria-label="지형 분류 탭 스크롤 영역">
+            <nav class="step-nav terrain-tabs" aria-label="지형 분류 탭">
+              <button class="step-pill terrain-tab active" type="button" data-terrain="BASIC" aria-selected="true">BASIC</button>
+              <button class="step-pill terrain-tab" type="button" data-terrain="대지형">대지형</button>
+              <button class="step-pill terrain-tab" type="button" data-terrain="건조지형">건조지형</button>
+              <button class="step-pill terrain-tab" type="button" data-terrain="빙하지형">빙하지형</button>
+              <button class="step-pill terrain-tab" type="button" data-terrain="하천지형">하천지형</button>
+              <button class="step-pill terrain-tab" type="button" data-terrain="해안지형">해안지형</button>
+              <button class="step-pill terrain-tab" type="button" data-terrain="화산지형">화산지형</button>
+              <button class="step-pill terrain-tab" type="button" data-terrain="카르스트지형">카르스트지형</button>
+              <button class="step-pill terrain-tab" type="button" data-terrain="QUIZ">QUIZ</button>
+            </nav>
+          </div>
+        </header>
+
+        <main class="main" id="terrain-main" aria-live="polite">
+          <div id="terrain-content"></div>
+        </main>
+      </div>
+    </div>
+
+    <div id="terrain-result-modal" class="step4-result-modal" hidden>
+      <div class="step4-result-backdrop" data-close-result-modal></div>
+      <section class="step4-result-sheet" role="dialog" aria-modal="true" aria-label="퀴즈 결과">
+        <button class="step4-result-close" type="button" aria-label="결과 닫기" data-close-result-modal>&times;</button>
+        <div class="step4-result-view">
+          <h3 class="step4-result-title">어나더 퀴즈 결과</h3>
+          <p id="result-score" class="step4-result-score">0 / 0</p>
+          <p id="result-message" class="step4-result-message">수고했어요!</p>
+          <div class="step4-result-actions">
+            <button id="result-retry-btn" class="step4-result-confirm" type="button">다시 하기</button>
+            <button id="result-close-btn" class="step4-result-confirm" type="button">닫기</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="hotspot-toast" class="wiz-toast wiz-toast--ok" role="status" aria-live="polite"></div>
+
+    <div id="landform-detail-modal" class="landform-detail-modal" hidden>
+      <div class="landform-detail-backdrop" data-close-landform-detail tabindex="-1"></div>
+      <div
+        class="landform-detail-sheet landform-detail-sheet--wide animate__animated animate__fadeInUp animate__fast"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="landform-detail-title"
+      >
+        <button type="button" class="landform-detail-close" data-close-landform-detail aria-label="상세 창 닫기">&times;</button>
+
+        <div class="landform-outline-title-row">
+          <h2 id="landform-detail-title" class="landform-detail-title landform-outline-main-title">
+            <span id="landform-detail-title-ko"></span>
+            <span lang="en" id="landform-detail-suben" class="landform-detail-suben" hidden></span>
+          </h2>
+          <a
+            id="landform-detail-search-link"
+            class="landform-detail-search-link"
+            href="https://www.google.com/search?tbm=isch&q=%EC%A7%80%ED%98%95"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="지형 구글 이미지 검색하기"
+          >
+            지형경관 검색하기
+          </a>
+        </div>
+
+        <div
+          class="landform-detail-visual-slot"
+          id="landform-detail-visual-slot"
+          role="region"
+          aria-label="지형 참고 이미지"
+        >
+          <img
+            id="landform-detail-visual-img"
+            class="landform-detail-visual-img"
+            alt=""
+            decoding="async"
+            loading="lazy"
+            hidden
+          />
+        </div>
+
+        <div
+          class="landform-detail-visual-slot landform-detail-visual-slot--secondary"
+          id="landform-detail-visual-slot-extra"
+          role="region"
+          aria-label="추가 참고 이미지"
+          hidden
+        >
+          <img
+            id="landform-detail-visual-img-extra"
+            class="landform-detail-visual-img"
+            alt=""
+            decoding="async"
+            loading="lazy"
+            hidden
+          />
+        </div>
+
+        <section class="landform-detail-section landform-outline-section" aria-labelledby="landform-outline-s1">
+          <h3 id="landform-outline-s1" class="landform-section-title">1. 형성 과정</h3>
+          <div id="landform-outline-body-s1" class="landform-outline-body"></div>
+        </section>
+
+        <section class="landform-detail-section landform-outline-section" aria-labelledby="landform-outline-s2">
+          <h3 id="landform-outline-s2" class="landform-section-title">2. 특징</h3>
+          <div id="landform-outline-body-s2" class="landform-outline-body"></div>
+        </section>
+      </div>
+    </div>
+
+    <div id="glacial-era-modal" class="glacial-era-modal" hidden>
+      <div class="glacial-era-backdrop" data-close-glacial-era-modal></div>
+      <section class="glacial-era-sheet" role="dialog" aria-modal="true" aria-label="빙하기 모습">
+        <button class="glacial-era-close" type="button" aria-label="빙하기 팝업 닫기" data-close-glacial-era-modal>&times;</button>
+        <img src="IMAGES/빙하지형_빙하기.PNG" alt="과거 빙하기의 빙하지형 모습" class="glacial-era-image" loading="lazy" decoding="async" />
+      </section>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
