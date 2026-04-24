@@ -1535,12 +1535,12 @@ const LANDFORM_DETAIL_IMAGES = {
     "item-volcano-cinder": "images/화산_종상화산.png",
   },
   카르스트지형: {
-    "item-karst-tower": "IMAGES/카르스트_탑카르스트.png",
-    "item-karst-doline": "IMAGES/카르스트_돌리네.png",
-    "item-karst-uvala": "IMAGES/카르스트_우발라.png",
-    "item-karst-polje": "IMAGES/카르스트_폴리에.png",
-    "item-karst-travertine": "IMAGES/카르스트_석회화단구.png",
-    "item-karst-cave": "IMAGES/카르스트_석회동굴.png",
+    "item-karst-tower": "images/카르스트_탑카르스트.png",
+    "item-karst-doline": "images/카르스트_돌리네.png",
+    "item-karst-uvala": "images/카르스트_우발라.png",
+    "item-karst-polje": "images/카르스트_폴리에.png",
+    "item-karst-travertine": "images/카르스트_석회화단구.png",
+    "item-karst-cave": "images/카르스트_석회동굴.png",
   },
 };
 
